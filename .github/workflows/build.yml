@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK with Buildozer
 
 on:
   push:
@@ -11,54 +11,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout repository code
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    # Step 2: Set up Python
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
-    # Step 3: Install dependencies (buildozer, etc.)
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y python3-pip
-        pip3 install buildozer
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip python3-setuptools python3-wheel zip unzip openjdk-17-jdk
+          pip install --upgrade pip setuptools wheel
+          pip install buildozer cython virtualenv
 
-    # Step 4: Install Android SDK (including sdkmanager)
-    - name: Install Android SDK
-      run: |
-        sudo apt update
-        sudo apt install -y openjdk-8-jdk wget unzip
-        mkdir -p $HOME/android-sdk/cmdline-tools
-        cd $HOME/android-sdk/cmdline-tools
-        wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip
-        unzip commandlinetools-linux-7583922_latest.zip
-        mv cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+      - name: Set up Android SDK
+        run: |
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip commandlinetools-linux-11076708_latest.zip
+          mkdir -p $HOME/android-sdk/cmdline-tools/latest
+          mv cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest/
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-    # Step 5: Set up environment variables
-    - name: Set environment variables
-      run: |
-        echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
+      - name: Build with Buildozer
+        env:
+          ANDROIDSDK: ${{ runner.home }}/android-sdk
+          ANDROIDNDK: ${{ runner.home }}/android-sdk/ndk-bundle
+        run: |
+          buildozer android debug
 
-    # Step 6: Accept SDK licenses
-    - name: Accept Android SDK licenses
-      run: |
-        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
-        sdkmanager --update
-
-    # Step 7: Install Android Build Tools and Platforms
-    - name: Install Android Build Tools and Platforms
-      run: |
-        sdkmanager "build-tools;36.1.0"
-        sdkmanager "platforms;android-36"
-        sdkmanager "platforms;android-35"
-
-    # Step 8: Build APK using Buildozer
-    - name: Build APK
-      run: |
-        buildozer android debug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartBudget-APK
+          path: bin/*.apk
