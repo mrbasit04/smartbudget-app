@@ -33,11 +33,12 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y openjdk-8-jdk wget unzip
-        mkdir -p $HOME/android-sdk
-        cd $HOME/android-sdk
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        cd $HOME/android-sdk/cmdline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip
         unzip commandlinetools-linux-7583922_latest.zip
-        yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --licenses
+        mv cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
         sdkmanager --update
 
     # Step 5: Install Android Build Tools and Platforms
@@ -50,7 +51,7 @@ jobs:
     # Step 6: Accept SDK licenses
     - name: Accept Android SDK licenses
       run: |
-        yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --licenses
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 
     # Step 7: Build APK using Buildozer
     - name: Build APK
