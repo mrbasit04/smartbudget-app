@@ -58,9 +58,6 @@ requirements = python3, kivy, kivymd, sqlite3, pandas, matplotlib
 # (bool) Hide the title bar
 android.hide_titlebar = 0
 
-# (bool) Force landscape or portrait
-android.orientation = portrait
-
 # (str) The format used to package the app
 package.format = apk
 
