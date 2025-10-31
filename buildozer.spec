@@ -91,5 +91,4 @@ build_dir = .buildozer
 # (str) Name of the output APK
 android.arch = armeabi-v7a
 
-# (str) Orientation mode (portrait or landscape)
-orientation = portrait
+
