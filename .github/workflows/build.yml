@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout the code
+    # Step 1: Checkout repository code
     - name: Checkout repository
       uses: actions/checkout@v2
 
@@ -21,25 +21,38 @@ jobs:
       with:
         python-version: 3.8
 
-    # Step 3: Install dependencies (like buildozer, etc.)
+    # Step 3: Install dependencies (buildozer, etc.)
     - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y python3-pip
         pip3 install buildozer
 
-    # Step 4: Accept SDK licenses
-    - name: Accept Android SDK licenses
-      run: |
-        yes | sdkmanager --licenses
-
-    # Step 5: Set up Android SDK and build tools
+    # Step 4: Install Android SDK (including sdkmanager)
     - name: Install Android SDK
+      run: |
+        sudo apt update
+        sudo apt install -y openjdk-8-jdk wget unzip
+        mkdir -p $HOME/android-sdk
+        cd $HOME/android-sdk
+        wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip
+        unzip commandlinetools-linux-7583922_latest.zip
+        yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --licenses
+        sdkmanager --update
+
+    # Step 5: Install Android Build Tools and Platforms
+    - name: Install Android Build Tools
       run: |
         sdkmanager "build-tools;36.1.0"
         sdkmanager "platforms;android-36"
+        sdkmanager "platforms;android-35"
 
-    # Step 6: Run the build
+    # Step 6: Accept SDK licenses
+    - name: Accept Android SDK licenses
+      run: |
+        yes | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --licenses
+
+    # Step 7: Build APK using Buildozer
     - name: Build APK
       run: |
         buildozer android debug
