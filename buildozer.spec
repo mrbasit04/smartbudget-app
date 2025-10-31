@@ -17,8 +17,7 @@ source.include_exts = py,png,jpg,kv,atlas,db,sqlite3
 # (str) Application versioning (method 1)
 version = 1.0
 
-# (str) Application orientation
-orientation = portrait
+
 
 # (bool) Indicate if the application should be fullscreen or not
 fullscreen = 0
