@@ -1,49 +1,37 @@
-name: Build APK with Buildozer
+name: Build SmartBudget APK
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
+      - name: Prepare environment
         run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip python3-setuptools python3-wheel zip unzip openjdk-17-jdk
-          pip install --upgrade pip setuptools wheel
-          pip install buildozer cython virtualenv
+          sudo apt-get update -y
+          sudo apt-get install -y docker.io
 
-      - name: Set up Android SDK
+      - name: Pull Buildozer Docker image
+        run: docker pull kivy/buildozer:latest
+
+      - name: Build APK inside Docker
         run: |
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip commandlinetools-linux-11076708_latest.zip
-          mkdir -p $HOME/android-sdk/cmdline-tools/latest
-          mv cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest/
-          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          docker run --rm \
+            -v "${{ github.workspace }}":/home/user/app \
+            -w /home/user/app \
+            kivy/buildozer:latest \
+            bash -c "buildozer android debug"
 
-      - name: Build with Buildozer
-        env:
-          ANDROIDSDK: ${{ runner.home }}/android-sdk
-          ANDROIDNDK: ${{ runner.home }}/android-sdk/ndk-bundle
-        run: |
-          buildozer android debug
-
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: SmartBudget-APK
